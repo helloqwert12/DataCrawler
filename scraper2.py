@@ -24,6 +24,10 @@ class HotelSpider(scrapy.Spider):
 				
 	def parse2(self, response):
 		print("---------> spider for url: ", response.url)
+		# Handle location
+		location = response.url[27:]
+		location = location[:-1]
+
 		SET_SELECTOR = 'div.list-item-hotel.clearfix'
 		global counter
 		for hotel in response.css(SET_SELECTOR):
@@ -49,7 +53,7 @@ class HotelSpider(scrapy.Spider):
 			idkey = "KS" + str(counter)
 			print(idkey)
 
-			yield addHotel(idkey, name, address, price, rate, str(len(star)), image)
+			yield addHotel(idkey, name, address, price, rate, str(len(star)), image, location)
 				
 		NEXT_PAGE_SELECTOR = '#listcathotel > div.page-nav.m-bottom > ul > li:last-child > a::attr(href)'
 		next_page = response.css(NEXT_PAGE_SELECTOR).extract_first()
@@ -59,12 +63,12 @@ class HotelSpider(scrapy.Spider):
 			 	callback = self.parse2
 			)
 
-def addHotel(idkey, name, address, price, rate, star, anh):
+def addHotel(idkey, name, address, price, rate, star, image, location):
 		db = MySQLdb.connect("localhost","root","","hotel_crawler", charset='utf8', use_unicode=True)
 		cursor = db.cursor()
 
-		sql = """INSERT INTO `hotel`(`MaKS`, `TenKS`, `DiaChi`, `Gia`, `XepHang`, `Sao`, `Anh`) VALUES(%s, %s, %s, %s, %s, %s, %s)"""
-		cursor.execute(sql, (idkey, name, address, price, rate, star, anh))
+		sql = """INSERT INTO `hotel`(`MaKS`, `TenKS`, `DiaChi`, `Gia`, `XepHang`, `Sao`, `Anh`, `Tinh`) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"""
+		cursor.execute(sql, (idkey, name, address, price, rate, star, image, location))
 		try:
 			db.commit()
 		except:
