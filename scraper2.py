@@ -49,7 +49,7 @@ class HotelSpider(scrapy.Spider):
 			idkey = "KS" + str(counter)
 			print(idkey)
 
-			yield addHotel(idkey, name, address, price, rate, str(len(star)))
+			yield addHotel(idkey, name, address, price, rate, str(len(star)), image)
 				
 		NEXT_PAGE_SELECTOR = '#listcathotel > div.page-nav.m-bottom > ul > li:last-child > a::attr(href)'
 		next_page = response.css(NEXT_PAGE_SELECTOR).extract_first()
