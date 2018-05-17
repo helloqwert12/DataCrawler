@@ -5,10 +5,25 @@ from ftfy import fix_encoding
 counter = 0
 class HotelSpider(scrapy.Spider):
 	name = "hotel_spider"
-	start_urls = ['http://gotrip.vn/khach-san-nha-trang/']
+	start_urls = ['http://gotrip.vn/']
+	download_delay = 5
 	global counter	
 	def parse(self, response):
-		print("----->response url: ", response.url)
+		SET_SELECTOR = '#footer > div.footer-menu > div > div'
+		location = response.css(SET_SELECTOR)
+		LOCATION_SELECTOR = 'ul li a::attr(href)'
+		hotelList = location.css(LOCATION_SELECTOR).extract()
+
+		for link in hotelList:
+			next_page = 'http://gotrip.vn' + link
+			if next_page:
+					yield scrapy.Request(
+					url = next_page,
+					callback=self.parse2
+				)
+				
+	def parse2(self, response):
+		print("---------> spider for url: ", response.url)
 		SET_SELECTOR = 'div.list-item-hotel.clearfix'
 		global counter
 		for hotel in response.css(SET_SELECTOR):
@@ -36,15 +51,13 @@ class HotelSpider(scrapy.Spider):
 
 			yield addHotel(idkey, name, address, price, rate, str(len(star)))
 				
-
 		NEXT_PAGE_SELECTOR = '#listcathotel > div.page-nav.m-bottom > ul > li:last-child > a::attr(href)'
 		next_page = response.css(NEXT_PAGE_SELECTOR).extract_first()
 		if next_page:
-			yield scrapy.Request(
+			return scrapy.Request(
 			 	response.urljoin(next_page),
-			 	callback = self.parse
+			 	callback = self.parse2
 			)
-
 
 def addHotel(idkey, name, address, price, rate, star, anh):
 		db = MySQLdb.connect("localhost","root","","hotel_crawler", charset='utf8', use_unicode=True)
